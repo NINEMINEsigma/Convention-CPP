@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #ifndef Convention_Runtime_Config_hpp
 #define Convention_Runtime_Config_hpp
 #pragma warning(disable : 4267)
@@ -1733,7 +1733,7 @@ namespace Convention
 			elements = std::forward<Arg>(value);
 		}
 		template<size_t index, typename Arg,
-			std::enable_if_t<std::is_convertible_v<const Arg&, Element>>, size_t> = 0 >
+			std::enable_if_t<std::is_convertible_v<const Arg&, Element>, size_t> = 0 >
 			void SetValue(const Arg & value) noexcept
 		{
 			static_assert(index == 0, "Index out of bounds for ElementTuple.");
