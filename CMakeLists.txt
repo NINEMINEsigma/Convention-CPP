@@ -48,6 +48,7 @@ endif()
 
 # Project
 add_subdirectory("Convention")
+add_subdirectory("[Test]")
 
 message("Root: CMAKE_CXX_STANDARD = ${CMAKE_CXX_STANDARD}" )
 message("Root: CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")

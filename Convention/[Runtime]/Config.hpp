@@ -1,6 +1,6 @@
 ﻿#pragma once
-#ifndef CONVENTION_KIT_CONFIG_H
-#define CONVENTION_KIT_CONFIG_H
+#ifndef Convention_Runtime_Config_hpp
+#define Convention_Runtime_Config_hpp
 #pragma warning(disable : 4267)
 #pragma warning(disable : 4244)
 #pragma warning(disable : 4996)
@@ -1645,7 +1645,7 @@ namespace Convention
 
 #pragma endregion
 
-#pragma region Tree
+#pragma region ElementTuple
 
 namespace Convention
 {
@@ -1753,4 +1753,4 @@ namespace Convention
 
 #pragma endregion
 
-#endif // !CONVENTION_KIT_CONFIG_H
+#endif // !Convention_Runtime_Config_hpp
