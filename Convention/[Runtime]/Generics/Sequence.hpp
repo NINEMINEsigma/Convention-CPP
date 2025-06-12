@@ -9,19 +9,31 @@ namespace Convention
 	namespace Generics
 	{
 
-		class IIterator
+		template<typename Element,typename ReadValueType = Element&>
+		class ISequenceIterator
 		{
 		public:
+			virtual ~ISequenceIterator() {}
+			virtual void Next() abstract;
+			virtual ReadValueType ReadValue() const abstract;
+			virtual decltype(auto) operator++()
+			{
 
+			}
+			ReadValueType operator++(int) noexcept(noexcept(operator++))
+			{
+
+			}
 		};
 
-		template<typename>
+		template<typename Element, typename SequenceIterator = ISequenceIterator<Element>>
 		class ISequence
 		{
 		public:
+			using iterator = std::enable_if<std::is_base_of_v<ISequenceIterator<Element>, SequenceIterator>, SequenceIterator>;
 			virtual ~ISequence() {}
-			virtual IIterator begin() abstract;
-			virtual IIterator end() abstract;
+			virtual iterator begin() abstract;
+			virtual iterator end() abstract;
 		};
 
 		/**
