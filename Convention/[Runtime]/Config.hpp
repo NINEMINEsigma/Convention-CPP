@@ -150,7 +150,21 @@ class ICompare
 {
 public:
 	virtual ~ICompare() {}
-	virtual int Compare(T left, T right) const noexcept abstract;
+	virtual int Compare(T left, T right) const noexcept
+	{
+		if constexpr (std::is_arithmetic_v<T>)
+		{
+			return left - right;
+		}
+		else
+		{
+			if (left < right)
+				return -1;
+			else if (right < left)
+				return 1;
+			return 0;
+		}
+	}
 };
 
 template<>
@@ -160,11 +174,45 @@ public:
 	template<typename T>
 	int Compare(const T& left, const T& right) const noexcept
 	{
-		if (left < right)
-			return -1;
-		else if (right < left)
-			return 1;
-		return 0;
+		if constexpr (std::is_arithmetic_v<T>)
+		{
+			return left - right;
+		}
+		else
+		{
+			if (left < right)
+				return -1;
+			else if (right < left)
+				return 1;
+			return 0;
+		}
+	}
+};
+
+template<typename T, typename Comparer = ICompare<T>>
+class IComparable
+{
+public:
+	virtual ~IComparable() {}
+	bool operator>(const T& other) const
+	{
+		return Comparer().Compare(*this, other) > 0;
+	}
+	bool operator<(const T& other) const
+	{
+		return Comparer().Compare(*this, other) < 0;
+	}
+	bool operator==(const T& other) const
+	{
+		return Comparer().Compare(*this, other) == 0;
+	}
+	bool operator<=(const T& other) const
+	{
+		return Comparer().Compare(*this, other) <= 0;
+	}
+	bool operator>=(const T& other) const
+	{
+		return Comparer().Compare(*this, other) >= 0;
 	}
 };
 

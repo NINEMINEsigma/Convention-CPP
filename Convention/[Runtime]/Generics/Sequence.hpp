@@ -8,33 +8,21 @@ namespace Convention
 {
 	namespace Generics
 	{
-		template<typename Element, typename Index = int, typename ReadValueType = Element&>
-		struct ISequence
-		{
-			virtual ~ISequence() {}
-			virtual ReadValueType operator[](Index index) abstract;
-			virtual Index size();
-			virtual Index GetBeginIndex() const abstract;
-			virtual Index GetEndIndex() const abstract;
-			virtual Index GetHeadIndex() const
-			{
-				return GetBeginIndex();
-			}
-			virtual Index GetTailIndex() const
-			{
-				return GetEndIndex() - 1;
-			}
-		};
-
 		namespace Iterator
 		{
-			template<typename Element, typename ReadValueType = Element&>
+
+			/**
+			* @brief 序列迭代器接口
+			* @tparam ReadValueType 读出元素类型
+			* @version BS 0.0.1
+			*/
+			template<typename ReadValueType>
 			struct ISequenceIterator
 			{
 				virtual ~ISequenceIterator() {}
 				virtual void Next() abstract;
 				virtual ReadValueType ReadValue() const abstract;
-				virtual ISequenceIterator& operator++()
+				ISequenceIterator& operator++()
 				{
 					this->Next();
 					return *this;
@@ -50,88 +38,84 @@ namespace Convention
 				}
 			};
 
-			template<typename Element>
-			class DefaultSequenceIterator:public ISequenceIterator<Element>
+			/**
+			* @brief 序列迭代器的默认实现
+			* @tparam Sequence 序列类型
+			* @tparam Index 索引类型, 必须为具有operator++()的类型
+			* @tparam ReadValueType 读出元素类型
+			* @version BS 0.0.1
+			*/
+			template<
+				typename Sequence,
+				typename Index,
+				typename ReadValueType = decltype(std::declval<Sequence>()[std::declval<Index>()])
+			>
+			class DefaultSequenceIterator
+				: public ISequenceIterator<ReadValueType>,
+				public IComparable<DefaultSequenceIterator<Sequence, Index, ReadValueType>, ICompare<Index>>
 			{
+			private:
+				Sequence& target;
+				Index index;
 			public:
-				DefaultSequenceIterator() {}
+				operator const Index&()
+				{
+					return index;
+				}
+				DefaultSequenceIterator(Sequence& target, Index index)
+					: __init(target), __init(index)
+				{
+				}
+				DefaultSequenceIterator(const DefaultSequenceIterator& other) noexcept
+					: target(other.target), index(other.index)
+				{
+				}
+				DefaultSequenceIterator& operator=(const DefaultSequenceIterator& other) noexcept
+				{
+					target = other.target;
+					index = other.index;
+					return *this;
+				}
+				virtual ~DefaultSequenceIterator() {}
+				void Next()
+				{
+					index++;
+				}
+				ReadValueType ReadValue() const
+				{
+					return target[index];
+				}
+				bool operator==(const ISequenceIterator<ReadValueType>& other) const noexcept
+				{
+					auto ptr = dynamic_cast<const DefaultSequenceIterator* const>(&other);
+					if (ptr != nullptr)
+						return index == ptr->index;
+					return false;
+				}
 			};
+
 		}
 
 		/**
-		* @brief 序列容器枚举
-		* @tparam Sequence 序列类型
-		* @tparam _Index 索引类型
+		* @brief 序列接口
+		* @tparam Element 元素
+		* @tparam Index 索引类型, 必须为具有operator++()的类型
+		* @tparam ReadValueType 读出元素类型
 		* @version BS 0.0.1
 		*/
-		template<typename Sequence, typename _Index = int>
-		class SequenceIterator
+		template<
+			typename Element,
+			typename Index = int,
+			typename ReadValueType = Element&
+		>
+		struct ISequence
 		{
-		private:
-			const Sequence& target;
-			_Index index;
-		public:
-			SequenceIterator(const Sequence& target, _Index index) :__init(target), __init(index) {}
-			SequenceIterator(const SequenceIterator& other) : target(other.target), index(other.index) {}
-			SequenceIterator& operator=(const SequenceIterator& other)
-			{
-				target = other.target;
-				index = other.index;
-				return *this;
-			}
-			bool operator==(const SequenceIterator& other) noexcept
-			{
-				return other.index == index;
-			}
-			bool operator!=(const SequenceIterator& other) noexcept
-			{
-				return other.index != index;
-			}
-			SequenceIterator& operator++() noexcept
-			{
-				++index;
-				return *this;
-			}
-			SequenceIterator operator++(int) noexcept
-			{
-				++index;
-				return SequenceIterator(target, index - 1);
-			}
-			SequenceIterator& operator--() noexcept
-			{
-				--index;
-				return *this;
-			}
-			SequenceIterator operator--(int) noexcept
-			{
-				--index;
-				return SequenceIterator(target, index + 1);
-			}
+			virtual ~ISequence() {}
+			virtual ReadValueType operator[](Index index) abstract;
+			virtual size_t size() const noexcept abstract;
+			Iterator::ISequenceIterator<ReadValueType> begin() abstract;
+			Iterator::ISequenceIterator<ReadValueType> end() abstract;
 		};
-
-		/**
-		* @brief 序列容器可枚举类型
-		* @tparam Sequence 序列类型
-		* @tparam _Index 索引类型
-		* @version BS 0.0.1
-		*/
-		template<typename Sequence, typename _Index = int>
-		struct SequenceRange
-		{
-			using iterator = SequenceIterator<Sequence, _Index>;
-			iterator mbegin, mend;
-			SequenceRange(const Sequence& target, _Index begin = 0, _Index end = 0ll - 1) :mbegin(target, begin), mend(target, end) {}
-
-			constexpr iterator begin()
-			{
-				return mbegin;
-			}
-			constexpr iterator end()
-			{
-				return mend;
-			}
-		};
-
 
 		/**
 		* @brief 栈上静态数组
