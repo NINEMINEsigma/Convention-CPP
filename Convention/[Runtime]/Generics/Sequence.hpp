@@ -8,33 +8,55 @@ namespace Convention
 {
 	namespace Generics
 	{
-
-		template<typename Element,typename ReadValueType = Element&>
-		class ISequenceIterator
+		template<typename Element, typename Index = int, typename ReadValueType = Element&>
+		struct ISequence
 		{
-		public:
-			virtual ~ISequenceIterator() {}
-			virtual void Next() abstract;
-			virtual ReadValueType ReadValue() const abstract;
-			virtual decltype(auto) operator++()
-			{
-
-			}
-			ReadValueType operator++(int) noexcept(noexcept(operator++))
-			{
-
-			}
-		};
-
-		template<typename Element, typename SequenceIterator = ISequenceIterator<Element>>
-		class ISequence
-		{
-		public:
-			using iterator = std::enable_if<std::is_base_of_v<ISequenceIterator<Element>, SequenceIterator>, SequenceIterator>;
 			virtual ~ISequence() {}
-			virtual iterator begin() abstract;
-			virtual iterator end() abstract;
+			virtual ReadValueType operator[](Index index) abstract;
+			virtual Index size();
+			virtual Index GetBeginIndex() const abstract;
+			virtual Index GetEndIndex() const abstract;
+			virtual Index GetHeadIndex() const
+			{
+				return GetBeginIndex();
+			}
+			virtual Index GetTailIndex() const
+			{
+				return GetEndIndex() - 1;
+			}
 		};
+
+		namespace Iterator
+		{
+			template<typename Element, typename ReadValueType = Element&>
+			struct ISequenceIterator
+			{
+				virtual ~ISequenceIterator() {}
+				virtual void Next() abstract;
+				virtual ReadValueType ReadValue() const abstract;
+				virtual ISequenceIterator& operator++()
+				{
+					this->Next();
+					return *this;
+				}
+				virtual bool operator==(const ISequenceIterator& other) const noexcept abstract;
+				bool operator!=(const ISequenceIterator& other) const noexcept
+				{
+					return !(*this == other);
+				}
+				ReadValueType operator*() const
+				{
+					return ReadValue();
+				}
+			};
+
+			template<typename Element>
+			class DefaultSequenceIterator:public ISequenceIterator<Element>
+			{
+			public:
+				DefaultSequenceIterator() {}
+			};
+		}
 
 		/**
 		* @brief 序列容器枚举
