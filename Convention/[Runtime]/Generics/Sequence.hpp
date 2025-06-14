@@ -101,20 +101,21 @@ namespace Convention
 		* @tparam Element 元素
 		* @tparam Index 索引类型, 必须为具有operator++()的类型
 		* @tparam ReadValueType 读出元素类型
+		* @tparam SequenceIterator 迭代器类型
 		* @version BS 0.0.1
 		*/
 		template<
 			typename Element,
-			typename Index = int,
-			typename ReadValueType = Element&
+			typename Index,
+			typename ReadValueType,
+			typename SequenceIterator
 		>
 		struct ISequence
 		{
 			virtual ~ISequence() {}
 			virtual ReadValueType operator[](Index index) abstract;
-			virtual size_t size() const noexcept abstract;
-			Iterator::ISequenceIterator<ReadValueType> begin() abstract;
-			Iterator::ISequenceIterator<ReadValueType> end() abstract;
+			virtual SequenceIterator begin() abstract;
+			virtual SequenceIterator end() abstract;
 		};
 
 		/**
@@ -124,7 +125,40 @@ namespace Convention
 		* @version BS 0.0.1
 		*/
 		template<typename Element, size_t size>
-		using Array = std::array<Element, size>;
+		class Array
+			: public ISequence<Element, int64_t, Element&,
+			Iterator::DefaultSequenceIterator<Array<Element, size>, int64_t, Element&>
+			>
+		{
+		private:
+			std::array<Element, size> container;
+		public:
+			using iterator = Iterator::DefaultSequenceIterator<Array<Element, size>, int64_t, Element&>;
+			template<typename... Args>
+			Array(Args&&... args) :container(std::forward<Args>(args)...) {}
+			Array& operator=(Array&& other)
+			{
+				container = std::move(other.container);
+				return *this;
+			}
+			virtual ~Array() {}
+			decltype(auto) RawData() const noexcept
+			{
+				return container;
+			}
+			Element& operator[](int64_t index) override
+			{
+				return container[index < 0 ? index + size : index];
+			}
+			virtual iterator begin()
+			{
+				return iterator(*this, 0);
+			}
+			virtual iterator end()
+			{
+				return iterator(*this, size);
+			}
+		};
 
 		/**
 		* @brief 栈上静态Bool数组
