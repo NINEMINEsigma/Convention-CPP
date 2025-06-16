@@ -272,14 +272,18 @@ constexpr int ConstexprStrCompare(
 #endif // PLATFORM_EXTENSION
 
 struct PlatformIndicator
+	: public
+#ifdef _DEBUG
+	std::false_type
+#else
+	std::true_type
+#endif
 {
-	using tag = void;
 #ifdef _DEBUG
 	constexpr static bool IsRelease = false;
 #else
 	constexpr static bool IsRelease = true;
 #endif
-	constexpr static bool value = IsRelease;
 #if defined(_WIN64)||defined(_WIN32)
 	constexpr static bool IsPlatformWindows = true;
 #else
