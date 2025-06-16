@@ -1805,4 +1805,199 @@ namespace Convention
 
 #pragma endregion
 
+#pragma region instance
+
+namespace Convention
+{
+	/**
+	* @brief 智能指针(共享)
+	*/
+	template<typename T>
+	using SharedPtr = std::shared_ptr<T>;
+
+	/**
+	* @brief 交付给UniquePtr的删除器
+	*/
+	template <class _Ty, template<typename> class _Alloc>
+	struct DefaultDelete
+	{
+		constexpr DefaultDelete() noexcept = default;
+
+		template <class _Ty2, std::enable_if_t<std::is_convertible_v<_Ty2*, _Ty*>, int> = 0>
+		_CONSTEXPR23 DefaultDelete(const DefaultDelete<_Ty2, _Alloc>&) noexcept {}
+
+		_CONSTEXPR23 void operator()(_Ty* _Ptr) const noexcept /* strengthened */
+		{
+			// delete a pointer
+			static_assert(0 < sizeof(_Ty), "can't delete an incomplete type");
+			static _Alloc<_Ty> alloc;
+			alloc.destroy(_Ptr);
+			alloc.deallocate(_Ptr, 1);
+		}
+	};
+
+	/**
+	* @brief 智能指针(完全所有权)
+	*/
+	template<typename T, typename Deleter = DefaultDelete<T, std::allocator>>
+	using UniquePtr = std::unique_ptr<T, Deleter>;
+
+	/**
+	* @brief 智能指针(弱持有)
+	*/
+	template<typename T>
+	using WeakPtr = std::weak_ptr<T>;
+
+
+	/**
+	 * @brief 支持内存控制的实体
+	 * @tparam T 目标类型
+	 * @tparam Allocator 内存管理器
+	 * @tparam IsUnique 指示智能指针类型
+	 */
+	template<
+		typename T,
+		template<typename...> class Allocator = std::allocator,
+		bool IsUnique = false
+	>
+	class instance
+		: public std::conditional_t<
+		IsUnique,
+		UniquePtr<T, DefaultDelete<T, Allocator>>,
+		SharedPtr<T>
+		>
+	{
+	private:
+		using _SharedPtr = SharedPtr<T>;
+		using _UniquePtr = UniquePtr<T, DefaultDelete<T, Allocator>>;
+		using _Mybase = std::conditional_t<IsUnique, _UniquePtr, _SharedPtr>;
+	private:
+		/**
+		* @brief 获取内存管理器
+		*/
+		static _MyAlloc& GetStaticMyAllocator()
+		{
+			static _MyAlloc alloc;
+			return alloc;
+		}
+		template<typename... Args>
+		static T* BuildMyPtr(Args&&... args)
+		{
+			T* ptr = GetStaticMyAllocator().allocate(1);
+			GetStaticMyAllocator().construct(ptr, std::forward<Args>(args)...);
+			return ptr
+		}
+		static void _DestoryMyPtr(_In_ T* ptr)
+		{
+			GetStaticMyAllocator().destroy(ptr);
+			GetStaticMyAllocator().deallocate(ptr, 1);
+		}
+	public:
+		/**
+		* @brief 任意匹配的构造函数
+		*/
+		template<typename... Args>
+		instance(Args&&... args) : _Mybase(_UniquePtr(std::forward<Args>(args)...)) {}
+		virtual ~instance() {}
+
+		/**
+		* @brief 是否为空指针
+		*/
+		bool IsEmpty() const noexcept
+		{
+			return this->get() != nullptr;
+		}
+
+		/**
+		* @brief 读取值(引用方式)
+		*/
+		T& ReadValue()
+		{
+			return *(this->get());
+		}
+		using _MyMoveableOther = std::conditional_t<IsUnique, UniquePtr<T, DefaultDelete<T, Allocator>>&&, SharedPtr<T>>;
+		instance& WriteValue(_MyMoveableOther ptr)
+		{
+			if constexpr (IsUnique)
+				*this = std::move(ptr);
+			else
+				*this = ptr;
+			return *this;
+		}
+		/**
+		* @brief 设置值(引用方式)
+		* @tparam Arg 传递值
+		*/
+		template<typename Arg, std::enable_if_t<std::is_convertible_v<Arg, T>, size_t> = 0>
+		T& WriteValue(Arg&& value)
+		{
+			if (this->IsEmpty())
+			{
+				*this = _UniquePtr(BuildMyPtr(std::forward<Arg>(value)));
+			}
+			else
+			{
+				*(this->get()) = std::forward<Arg>(value);
+			}
+			return this->ReadValue();
+		}
+		/**
+		* @brief 读取const值(引用方式)
+		*/
+		const T& ReadConstValue() const
+		{
+			return *(this->get());
+		}
+
+		/**
+		* @brief 拷贝赋值函数
+		*/
+		virtual instance& operator=(const instance& value) noexcept
+		{
+			if constexpr (IsUnique)
+			{
+				this->WriteValue(value.ReadConstValue());
+			}
+			else
+			{
+				_Mybase::operator=(value);
+			}
+			return *this;
+		}
+		/**
+		* @brief 移动赋值函数
+		*/
+		virtual instance& operator=(instance&& value) noexcept
+		{
+			_Mybase::operator=(std::move(value));
+			return *this;
+		}
+	};
+
+	/**
+	 * @brief 类栈实体
+	 * @tparam T 目标类型
+	 * @tparam Allocator 内存管理器
+	 */
+	template<
+		typename T,
+		template<typename...> class Allocator = std::allocator
+	>
+	using meta = instance<T, Allocator, true>;
+
+	/**
+	 * @brief 类引用实体
+	 * @tparam T 目标类型
+	 * @tparam Allocator 内存管理器
+	 */
+	template<
+		typename T,
+		template<typename...> class Allocator = std::allocator
+	>
+	using object = instance<T, Allocator, false>;
+}
+
+#pragma endregion
+
+
 #endif // !Convention_Runtime_Config_hpp

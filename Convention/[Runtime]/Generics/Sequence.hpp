@@ -18,6 +18,47 @@ namespace Convention
 	namespace Generics
 	{
 
+		namespace Collections
+		{
+
+			/**
+			* @brief 支持可枚举类型的迭代
+			* @tparam ReadValueType 读出元素的类型
+			* @version BS 0.0.1
+			*/
+			template<typename ReadValueType>
+			struct IEnumerator
+			{
+				virtual ~IEnumerator() {}
+				/**
+				* @brief 获取位于枚举器当前位置中的元素
+				* @return The element in the collection at the current position of the enumerator.
+				*/
+				virtual ReadValueType ReadValue() const abstract;
+
+				/**
+				* @brief 将枚举器前进到下一个元素
+				*
+				* @return	如果枚举器成功前进到下一个元素返回true,
+				*			否则枚举器到达无效的位置或枚举器已失效
+				*/
+				virtual bool MoveNext() abstract;
+			};
+
+			/**
+			* @brief 可枚举对象
+			* @tparam Enumerator 枚举器
+			* @version BS 0.0.1
+			*/
+			template<typename Enumerator>
+			struct IEnumerable
+			{
+				virtual Enumerator begin() abstract;
+				virtual Enumerator end() abstract;
+			};
+
+		}
+
 		/**
 		* @brief 序列性状, 用于静态判断
 		* @tparam Sequence 序列类型
