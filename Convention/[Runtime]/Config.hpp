@@ -1999,5 +1999,4 @@ namespace Convention
 
 #pragma endregion
 
-
 #endif // !Convention_Runtime_Config_hpp
