@@ -8,42 +8,42 @@ namespace Convention
 {
     namespace Math
     {
-        // Mathematical constants
-        template<typename T>
-        struct Constants
-        {
-            static constexpr T PI = static_cast<T>(3.14159265358979323846);
-            static constexpr T E = static_cast<T>(2.71828182845904523536);
-            static constexpr T SQRT2 = static_cast<T>(1.41421356237309504880);
-            static constexpr T SQRT3 = static_cast<T>(1.73205080756887729353);
-            static constexpr T LN2 = static_cast<T>(0.69314718055994530942);
-            static constexpr T LN10 = static_cast<T>(2.30258509299404568402);
-        };
-
         // Basic math utilities
         template<typename T>
-        constexpr T Abs(const T& value)
+        inline T Abs(const T& value)
         {
-            return value < T{} ? -value : value;
+			return std::abs(value);
         }
 
         template<typename T>
-        constexpr T Min(const T& a, const T& b)
+        inline T Min(const T& a, const T& b)
         {
-            return a < b ? a : b;
+			return std::min(a, b);
         }
 
-        template<typename T>
-        constexpr T Max(const T& a, const T& b)
-        {
-            return a > b ? a : b;
-        }
+		template<typename T, typename... Args>
+		inline T Min(const T& a, const Args&... args)
+		{
+			return std::min(a, Min<T>(args...));
+		}
 
         template<typename T>
-        constexpr T Clamp(const T& value, const T& min, const T& max)
+        inline T Max(const T& a, const T& b)
         {
-            return Min(Max(value, min), max);
+			return std::max(a, b);
         }
+
+		template<typename T, typename... Args>
+		inline T Max(const T& a, const Args&... args)
+		{
+			return std::max(a, Max<T>(args...));
+		}
+
+        template<typename T,typename T2,typename T3>
+		constexpr T Clamp(const T& value, const T2& min, const T3& max)
+		{
+			return Min<T>(Max<T>(value, min), max);
+		}
 
         template<typename T>
         constexpr T Sign(const T& value)
@@ -117,13 +117,13 @@ namespace Convention
         template<typename T>
         constexpr T DegToRad(const T& degrees)
         {
-            return degrees * Constants<T>::PI / static_cast<T>(180);
+            return degrees * std::_Pi_val / static_cast<T>(180);
         }
 
         template<typename T>
         constexpr T RadToDeg(const T& radians)
         {
-            return radians * static_cast<T>(180) / Constants<T>::PI;
+            return radians * static_cast<T>(180) / std::_Pi_val;
         }
 
         // Logarithmic functions

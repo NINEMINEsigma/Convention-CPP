@@ -74,60 +74,19 @@ namespace Convention
 		}
 	};
 
-	template<template<typename> class ElementPtr = std::shared_ptr>
 	class DependenceModel
 		: public IConvertModel<bool>
 	{
 	private:
-		std::vector<ElementPtr<IConvertable<bool>>> queries;
+		std::vector<IConvertable<bool>*> queries;
 	public:
-		DependenceModel(std::vector<ElementPtr<IConvertable<bool>>> queries) :__init(queries) {}
+		DependenceModel(std::vector<IConvertable<bool>*> queries) :__init(queries) {}
 
 		bool ConvertTo()
 		{
 			for (auto&& query : queries)
 			{
-				if ((*query).ConvertTo() == false)
-					return false;
-			}
-			return true;
-		}
-
-		decltype(auto) begin() noexcept
-		{
-			return queries.begin();
-		}
-
-		decltype(auto) end() noexcept
-		{
-			return queries.end();
-		}
-
-		virtual void Load(std::string_view data) override
-		{
-			throw std::runtime_error("NotImplementedException");
-		}
-
-		virtual string Save() override
-		{
-			throw std::runtime_error("NotImplementedException");
-		}
-	};
-
-	template<>
-	class DependenceModel<ElementTuple>
-		: public IConvertModel<bool>
-	{
-	private:
-		std::vector<IConvertable<bool>> queries;
-	public:
-		DependenceModel(std::vector<IConvertable<bool>> queries) :__init(queries) {}
-
-		bool ConvertTo()
-		{
-			for (auto&& query : queries)
-			{
-				if (query.ConvertTo() == false)
+				if (query->ConvertTo() == false)
 					return false;
 			}
 			return true;
@@ -177,10 +136,13 @@ namespace Convention
 #pragma region Objects Registered
 
 	private:
+
+		std::map<TypeID, std::vector<std::shared_ptr<IConvertable<bool>>>> ImplTypeQuery;
+
 		std::set<TypeID> RegisterHistory;
 		std::map<TypeID, void*> UncompleteTargets;
 		std::map<TypeID, std::function<void()>> Completer;
-		std::map<TypeID, DependenceModel<>> Dependences;
+		std::map<TypeID, DependenceModel> Dependences;
 		std::map<TypeID, void*> Childs;
 
 		class TypeQuery
@@ -247,6 +209,7 @@ namespace Convention
 			{
 				Childs[complete] = UncompleteTargets[complete];
 				UncompleteTargets.erase(complete);
+				ImplTypeQuery.erase(complete);
 			}
 		}
 
@@ -260,12 +223,14 @@ namespace Convention
 			RegisterHistory.insert(slot.hash_code());
 			Completer[slot.hash_code()] = completer;
 			UncompleteTargets[slot.hash_code()] = target;
-			std::vector<std::shared_ptr<IConvertable<bool>>> dependenceModel;
+			std::vector<IConvertable<bool>*> dependenceModel;
 			for (auto&& type : dependences)
 			{
-				dependenceModel.push_back(std::make_shared<TypeQuery>(new TypeQuery(slot)));
+				auto cur = std::make_shared<TypeQuery>(new TypeQuery(slot));
+				ImplTypeQuery[slot.hash_code()].push_back(cur);
+				dependenceModel.push_back(cur.get());
 			}
-			Dependences[slot.hash_code()] = DependenceModel<>(dependenceModel);
+			Dependences[slot.hash_code()] = DependenceModel(dependenceModel);
 			std::set<TypeID> buffer;
 			while (InternalRegisteringComplete(buffer))
 				InternalRegisteringUpdate(buffer);
@@ -320,11 +285,11 @@ namespace Convention
 
 		public:
 			Listening(const std::function<void(const ISignal&)>& action, TypeID type)
-				: __init(action),__init(type){ }
+				: __init(action), __init(type) {}
 			Listening(const std::function<void(const ISignal&)>& action, Type type)
 				: __init(action), type(type.hash_code()) {}
 
-			void StopListening()
+			void StopListening() const
 			{
 				if (SingletonModel<Architecture>::Instance().SignalListener.count(type))
 					SingletonModel<Architecture>::Instance().SignalListener[type].erase(action);
@@ -349,7 +314,7 @@ namespace Convention
 		template<typename Signal>
 		Listening AddListener(std::enable_if_t<std::is_base_of_v<ISignal, Signal>, std::function<void(const Signal&)>> listener)
 		{
-			return AddListener<Signal>(typeof(Signal), listener);
+			return AddListener<Signal>(typeid(Signal), listener);
 		}
 
 		void SendMessage(Type slot, const ISignal& signal)
@@ -366,7 +331,7 @@ namespace Convention
 		template<typename Signal>
 		void SendMessage(std::enable_if_t<std::is_base_of_v<ISignal, Signal>, const Signal&> signal)
 		{
-			return SendMessage(signal.GetType(), signal);
+			return SendMessage(typeid(Signal), signal);
 		}
 
 #pragma endregion
