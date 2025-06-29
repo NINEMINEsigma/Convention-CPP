@@ -46,6 +46,13 @@ endif()
 
 # Sub Project(buf from third-party)
 
+# Find packages for dependencies
+find_package(nlohmann_json QUIET)
+if(NOT nlohmann_json_FOUND)
+    message(STATUS "nlohmann_json not found, consider installing it for JSON support")
+    # You can add FetchContent or other methods to download nlohmann_json here
+endif()
+
 # Project
 add_subdirectory("Convention")
 add_subdirectory("[Test]")
