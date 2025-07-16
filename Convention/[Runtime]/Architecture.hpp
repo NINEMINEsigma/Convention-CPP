@@ -381,15 +381,20 @@ namespace Convention
 
 		void UpdateTimeline()
 		{
-			for(auto&& [_, timeline] : TimelineQuenes)
+			for (bool stats = true; stats;)
 			{
-				if (timeline.Quene[timeline.Context].predicate())
+				stats = false;
+				for (auto&& [_, timeline] : TimelineQuenes)
 				{
-					for(auto&& action : timeline.Quene[timeline.Context].actions)
+					if (timeline.Quene[timeline.Context].predicate())
 					{
-						action();
+						stats = true;
+						for (auto&& action : timeline.Quene[timeline.Context].actions)
+						{
+							action();
+						}
+						timeline.Context++;
 					}
-					timeline.Context++;
 				}
 			}
 		}
