@@ -1724,7 +1724,7 @@ namespace Convention
 			if constexpr (index == 0)
 				return sizeof(Element);
 			else
-				return sizeof(Element) + _MyNext::ElementOffset<index - 1>();
+				return sizeof(Element) + _MyNext:: template ElementOffset<index - 1>();
 		}
 		template<size_t index>
 		decltype(auto) GetValue() const noexcept
@@ -1899,6 +1899,12 @@ namespace Convention
 		{
 			GetStaticMyAllocator().destroy(ptr);
 			GetStaticMyAllocator().deallocate(ptr, 1);
+		}
+	protected:
+		template<typename... Args>
+		static T* ConstructMyPtr(Args&&... args)
+		{
+			return BuildMyPtr(std::forward<Args>(args)...);
 		}
 	public:
 		/**

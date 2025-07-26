@@ -166,22 +166,32 @@ namespace Convention
         GlobalConfig& LoadProperties()
         {
             auto configFile = GetConfigFile();
-            if (!configFile.Exists()) {
+            if (!configFile.Exists())
+			{
                 data_pair.clear();
-            } else {
-                try {
+            }
+			else
+			{
+                try
+				{
                     auto content = configFile.LoadAsText();
                     auto config = nlohmann::json::parse(content);
 
-                    if (config.contains("properties") && config["properties"].is_object()) {
+                    if (config.contains("properties") && config["properties"].is_object())
+					{
                         data_pair.clear();
-                        for (auto& [key, value] : config["properties"].items()) {
+                        for (auto& [key, value] : config["properties"].items())
+						{
                             data_pair[key] = value;
                         }
-                    } else {
+                    }
+					else
+					{
                         throw std::runtime_error("Can't find properties in config file");
                     }
-                } catch (const nlohmann::json::exception& e) {
+                }
+				catch (const nlohmann::json::exception& e)
+				{
                     throw std::runtime_error("JSON parsing error: " + std::string(e.what()));
                 }
             }
@@ -240,7 +250,7 @@ namespace Convention
             Log(messageType, message, nullptr);
         }
 
-        void LogPropertyNotFound(const std::string& message, std::function<void(const std::string&)> logger = nullptr, const std::string& defaultValue = "")
+        void LogPropertyNotFound(const std::string& message, std::function<void(const std::string&)> logger, const std::string& defaultValue)
         {
             std::string fullMessage = message;
             if (!defaultValue.empty()) {
@@ -249,7 +259,7 @@ namespace Convention
             Log("Property not found", fullMessage, logger);
         }
 
-        void LogPropertyNotFound(const std::string& message, const std::string& defaultValue = "")
+        void LogPropertyNotFound(const std::string& message, const std::string& defaultValue)
         {
             LogPropertyNotFound(message, nullptr, defaultValue);
         }
@@ -263,14 +273,19 @@ namespace Convention
         T FindItem(const std::string& key, const T& defaultValue = T{}) const
         {
             auto it = data_pair.find(key);
-            if (it != data_pair.end()) {
-                try {
+            if (it != data_pair.end())
+			{
+                try
+				{
                     return it->second.get<T>();
-                } catch (const nlohmann::json::exception&) {
-                    LogPropertyNotFound("Cannot convert value for key: " + key);
                 }
-            } else {
-                LogPropertyNotFound("Key not found: " + key);
+				catch (const nlohmann::json::exception&)
+				{
+					LogPropertyNotFound(std::string("Cannot convert value for key: ") + key, std::to_string(defaultValue));
+                }
+            } else
+			{
+				LogPropertyNotFound(std::string("Key not found: ") + key);
             }
             return defaultValue;
         }
