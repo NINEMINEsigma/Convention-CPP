@@ -1394,7 +1394,9 @@ struct StringIndicator
 	static str ToString(const T& value)
 	{
 		if_exists(T::ToString)
+		{
 			return value.ToString();
+		}
 		if constexpr (std::is_constructible_v<const T&, str>)
 			return value;
 		else if constexpr (std::is_same_v<str, std::wstring>)
@@ -1800,6 +1802,11 @@ namespace Convention
 	public:
 		constexpr static size_t size = 0;
 		constexpr static size_t _MySize = 0;
+		template<size_t index>
+		constexpr static size_t ElementOffset()
+		{
+			return 0;
+		}
 	};
 }
 
@@ -1871,6 +1878,7 @@ namespace Convention
 		using _SharedPtr = SharedPtr<T>;
 		using _UniquePtr = UniquePtr<T, DefaultDelete<T, Allocator>>;
 		using _Mybase = std::conditional_t<IsUnique, _UniquePtr, _SharedPtr>;
+		using _MyAlloc = Allocator<T>;
 	private:
 		/**
 		* @brief 获取内存管理器
@@ -1885,7 +1893,7 @@ namespace Convention
 		{
 			T* ptr = GetStaticMyAllocator().allocate(1);
 			GetStaticMyAllocator().construct(ptr, std::forward<Args>(args)...);
-			return ptr
+			return ptr;
 		}
 		static void _DestoryMyPtr(_In_ T* ptr)
 		{

@@ -10,13 +10,25 @@ namespace Convention
     {
     private:
         std::filesystem::path FullPath;
-        mutable std::fstream OriginControlStream;
-        mutable bool StreamOpen = false;
+		//mutable std::fstream OriginControlStream;
+        //mutable bool StreamOpen = false;
 
     public:
-        explicit ToolFile(const std::filesystem::path& path) : FullPath(path) {}
-        explicit ToolFile(const std::string& path) : FullPath(path) {}
-        explicit ToolFile(const char* path) : FullPath(path) {}
+        ToolFile(const std::filesystem::path& path) : FullPath(path) {}
+        ToolFile(const std::string& path) : FullPath(path) {}
+        ToolFile(const char* path) : FullPath(path) {}
+		ToolFile(const ToolFile& other) : FullPath(other.FullPath) {}
+		ToolFile(ToolFile&& other) : FullPath(std::move(other.FullPath)) {}
+		ToolFile& operator=(const ToolFile& other)
+		{
+			this->FullPath = other.FullPath;
+			return *this;
+		}
+		ToolFile& operator=(ToolFile&& other)
+		{
+			this->FullPath = std::move(other.FullPath);
+			return *this;
+		}
 
         // Convert to string
         operator std::string() const { return FullPath.string(); }
@@ -85,20 +97,21 @@ namespace Convention
             return *this;
         }
 
-        ToolFile& Open(std::ios::openmode mode = std::ios::in | std::ios::out)
+        /*ToolFile& Open(std::ios::openmode mode = std::ios::in | std::ios::out)
         {
             Close();
             OriginControlStream.open(FullPath, mode);
             StreamOpen = OriginControlStream.is_open();
             return *this;
-        }
+        }*/
 
         ToolFile& Close()
         {
-            if (StreamOpen) {
+            /*if (StreamOpen)
+			{
                 OriginControlStream.close();
                 StreamOpen = false;
-            }
+            }*/
             return *this;
         }
 
@@ -154,7 +167,8 @@ namespace Convention
         ToolFile& MustExistsPath()
         {
             auto parent = FullPath.parent_path();
-            if (!parent.empty() && !std::filesystem::exists(parent)) {
+            if (!parent.empty() && !std::filesystem::exists(parent))
+			{
                 std::filesystem::create_directories(parent);
             }
             return *this;

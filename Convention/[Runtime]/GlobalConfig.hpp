@@ -16,14 +16,12 @@ namespace Convention
         static void InitExtensionEnv()
         {
             ConstConfigFile = "config.json";
-            ProjectConfig::InitExtensionEnv();
         }
 
         static void GenerateEmptyConfigJson(ToolFile& file)
         {
             nlohmann::json config;
             config["properties"] = nlohmann::json::object();
-            file.Open(std::ios::out | std::ios::trunc);
             file.SaveAsText(config.dump(4));
             file.Close();
         }
@@ -69,7 +67,8 @@ namespace Convention
         ToolFile GetFile(const std::string& path, bool isMustExist = false)
         {
             auto file = DataDir | path;
-            if (isMustExist) {
+            if (isMustExist)
+			{
                 file.MustExistsPath();
             }
             return file;
@@ -78,13 +77,16 @@ namespace Convention
         bool EraseFile(const std::string& path)
         {
             auto file = DataDir | path;
-            if (file.Exists()) {
-                try {
-                    file.Open(std::ios::out | std::ios::trunc);
-                    file.Close();
-                    return true;
-                } catch (...) {}
-            }
+			if (file.Exists())
+			{
+				file.MustExistsPath();
+				if (file.IsFile())
+				{
+					file.Remove();
+					file.Create();
+				}
+				return true;
+			}
             return false;
         }
 
@@ -209,7 +211,7 @@ namespace Convention
             MyDefaultLogger = std::move(logger);
         }
 
-        virtual void Log(const std::string& messageType, const std::string& message, std::function<void(const std::string&)> logger = nullptr)
+        virtual void Log(const std::string& messageType, const std::string& message, std::function<void(const std::string&)> logger)
         {
             configLogging_tspace = std::max(configLogging_tspace, messageType.length());
 
