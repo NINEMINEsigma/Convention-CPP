@@ -1965,8 +1965,8 @@ namespace Convention
 		/**
 		* @brief 拷贝赋值函数
 		*/
-		template<typename = std::declval<instance>().WriteValue(std::declval<instance>().ReadConstValue())>
-		instance& operator=(const instance& value) noexcept
+		template<typename = std::void_t<std::declval<instance>().WriteValue(std::declval<instance>().ReadConstValue())>>
+		instance& operator=(const instance& value)
 		{
 			if constexpr (IsUnique)
 			{
@@ -1981,7 +1981,7 @@ namespace Convention
 		/**
 		* @brief 拷贝赋值函数
 		*/
-		virtual instance& operator=(const instance& value) noexcept
+		virtual instance& operator=(const instance& value) noexcept(IsUnique == false)
 		{
 			if constexpr (IsUnique)
 			{
