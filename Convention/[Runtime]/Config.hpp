@@ -267,9 +267,9 @@ constexpr int ConstexprStrCompare(
 #define __PLATFORM_VERSION "Unknown"
 #endif // __PLATFORM_VERSION
 
-#ifndef PLATFORM_EXTENSION
-#define PLATFORM_EXTENSION ""
-#endif // PLATFORM_EXTENSION
+#ifndef __PLATFORM_EXTENSION
+#define __PLATFORM_EXTENSION ""
+#endif // __PLATFORM_EXTENSION
 
 struct PlatformIndicator
 	: public
@@ -327,7 +327,6 @@ struct PlatformIndicator
 #else
 	constexpr static bool IsGNUC = false;
 #endif // __GNUC__
-
 
 	constexpr static const char* PlatformInfomation = __PLATFORM_NAME "-" __PLATFORM_VERSION  "-"  __PLATFORM_EXTENSION;
 	// not lock current thread, if input is exist will return it otherwise return -1
@@ -1966,11 +1965,27 @@ namespace Convention
 		/**
 		* @brief 拷贝赋值函数
 		*/
-		virtual instance& operator=(const instance& value) noexcept
+		template<typename = std::declval<instance>().WriteValue(std::declval<instance>().ReadConstValue())>
+		instance& operator=(const instance& value) noexcept
 		{
 			if constexpr (IsUnique)
 			{
 				this->WriteValue(value.ReadConstValue());
+			}
+			else
+			{
+				_Mybase::operator=(value);
+			}
+			return *this;
+		}
+		/**
+		* @brief 拷贝赋值函数
+		*/
+		virtual instance& operator=(const instance& value) noexcept
+		{
+			if constexpr (IsUnique)
+			{
+				throw std::runtime_error("unique ptr is not support to copy");
 			}
 			else
 			{

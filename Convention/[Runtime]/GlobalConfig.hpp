@@ -11,11 +11,11 @@ namespace Convention
     class GlobalConfig
     {
     public:
-        static std::string ConstConfigFile;
+		constexpr static auto ConstConfigFile = "config.json";
 
         static void InitExtensionEnv()
         {
-            ConstConfigFile = "config.json";
+
         }
 
         static void GenerateEmptyConfigJson(ToolFile& file)
@@ -52,9 +52,12 @@ namespace Convention
 
             // Build up init data file
             auto configFile = GetConfigFile();
-            if (!configFile.Exists()) {
+            if (!configFile.Exists())
+			{
                 GenerateEmptyConfigJson(configFile);
-            } else if (isLoad) {
+            }
+			else if (isLoad)
+			{
                 LoadProperties();
             }
         }
@@ -270,7 +273,7 @@ namespace Convention
         }
 
         template<typename T>
-        T FindItem(const std::string& key, const T& defaultValue = T{}) const
+        T FindItem(const std::string& key, const T& defaultValue = T{})
         {
             auto it = data_pair.find(key);
             if (it != data_pair.end())
@@ -285,32 +288,20 @@ namespace Convention
                 }
             } else
 			{
-				LogPropertyNotFound(std::string("Key not found: ") + key);
+				LogPropertyNotFound(std::string("Key not found: ") + key, std::to_string(defaultValue));
             }
             return defaultValue;
         }
     };
 
-    // Static member definition
-    std::string GlobalConfig::ConstConfigFile = "config.json";
-
     class ProjectConfig : public GlobalConfig
     {
     private:
-        static std::string ProjectConfigFileFocus;
+		constexpr static auto ProjectConfigFileFocus = "Assets/";
 
     public:
-        static void InitExtensionEnv()
-        {
-            ProjectConfigFileFocus = "Assets/";
-        }
 
-        ProjectConfig(bool isLoad = true) : GlobalConfig(ProjectConfigFileFocus, true, isLoad) {}
-
-        static void SetProjectConfigFileFocus(const std::string& path)
-        {
-            ProjectConfigFileFocus = path;
-        }
+        ProjectConfig(bool isLoad = true) : GlobalConfig(ToolFile(ProjectConfigFileFocus), true, isLoad) {}
 
         static std::string GetProjectConfigFileFocus()
         {
@@ -318,8 +309,7 @@ namespace Convention
         }
     };
 
-    // Static member definition
-    std::string ProjectConfig::ProjectConfigFileFocus = "Assets/";
+
 }
 
 #endif // Convention_Runtime_GlobalConfig_hpp
