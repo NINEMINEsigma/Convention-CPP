@@ -1,5 +1,14 @@
 ﻿# Make Setting
+set(MAIN_PROJECT OFF)
+if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+    set(MAIN_PROJECT ON)
+endif()
+
+if(MAIN_PROJECT)
 message("Root: --- ----- ----- ----- ----- --")
+else()
+message("Convention: --- ----- ----- ----- ----- --")
+endif()
 
 add_compile_definitions(__PLATFORM_NAME="${PLATFORM_NAME}")
 add_compile_definitions(__PLATFORM_VERSION="${PLATFORM_VERSION}")
@@ -15,8 +24,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(C_STANDARD 11)
 # Enable UNICODE
 add_compile_definitions(UNICODE)
-message("Root: PROJECT_BINARY_DIR = ${PROJECT_BINARY_DIR}")
-
+if(MAIN_PROJECT)
+    message("Root: PROJECT_BINARY_DIR = ${PROJECT_BINARY_DIR}")
+endif()
 
 # MSVC Policy
 if (POLICY CMP0141)
@@ -28,13 +38,15 @@ cmake_policy(SET CMP0076 NEW)
 
 
 # Message Platfrom
-message("Root: ${PLATFORM_NAME}-${PLATFORM_VERSION}-${PLATFORM_EXTENSION}")
+if(MAIN_PROJECT)
+    message("Root: ${PLATFORM_NAME}-${PLATFORM_VERSION}-${PLATFORM_EXTENSION}")
+endif()
 
 # Threads Enable
 add_compile_definitions(_PTHREADS)
 
 # Project
-project("Convention-All")
+project("Convention")
 
 # 设置构建共享库
 set(BUILD_SHARED_LIBS ON)
@@ -55,10 +67,16 @@ endif()
 
 # Project
 add_subdirectory("Convention")
-add_subdirectory("[Test]")
+if(MAIN_PROJECT)
+    add_subdirectory("[Test]")
+endif()
 
+if(MAIN_PROJECT)
 message("Root: CMAKE_CXX_STANDARD = ${CMAKE_CXX_STANDARD}" )
 message("Root: CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")
 message("Root: CMAKE_CXX_COMPILER_VERSION = ${CMAKE_CXX_COMPILER_VERSION}")
 
 message("Root: ----- ----- ----- ----- -----")
+else()
+message("Convention: ----- ----- ----- ----- -----")
+endif()
