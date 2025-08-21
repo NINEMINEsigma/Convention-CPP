@@ -1,3 +1,6 @@
 [submodule "Convention/[nlohmann]"]
 	path = Convention/[nlohmann]
 	url = https://github.com/nlohmann/json.git
+[submodule "Convention/[Static]"]
+	path = Convention/[Static]
+	url = https://github.com/NINEMINEsigma/ModernCPP.git

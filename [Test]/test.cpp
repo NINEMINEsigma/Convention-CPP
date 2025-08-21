@@ -1,10 +1,28 @@
 #include<Config.hpp>
-#include<GlobalConfig.hpp>
 
 using namespace std;
 using namespace Convention;
 
+class A
+{
+public:
+	virtual void a() {}
+};
+
+class B
+{
+public:
+	virtual void b() {}
+};
+
+class C :public A, protected B
+{
+public:
+	virtual void c() {}
+};
+
 int main()
 {
-	cout << ProjectConfig().LoadProperties().FindItem<std::string>("test", "test") << endl;
+	C c;
+	((A)c).a();
 }
