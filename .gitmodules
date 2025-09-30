@@ -3,4 +3,4 @@
 	url = https://github.com/nlohmann/json.git
 [submodule "Convention/[Static]"]
 	path = Convention/[Static]
-	url = https://github.com/NINEMINEsigma/ModernCPP.git
+	url = http://www.liubai.site:3000/ninemine/ModernCPP.git
